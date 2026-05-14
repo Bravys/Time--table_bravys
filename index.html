@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Player Login</title>
+  <style>
+    body {
+      background-color: #1e1e2f;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+    input, button {
+      font-size: 18px;
+      padding: 10px;
+      margin: 10px;
+      border: none;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .options {
+      margin-top: 20px;
+      text-align: left;
+      display: inline-block;
+    }
+    .leaderboard {
+      margin-top: 40px;
+      text-align: center;
+    }
+    table {
+      margin: auto;
+      border-collapse: collapse;
+      width: 60%;
+    }
+    th, td {
+      border: 1px solid #555;
+      padding: 8px;
+    }
+    th {
+      background-color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>Enter Your User ID</h1>
+  <input type="text" id="userId" placeholder="User ID">
+  <button onclick="login()">Login</button>
+  <h2 id="welcome"></h2>
+  <h3 id="reward"></h3>
+
+  <div id="options" class="options" style="display:none;">
+    <form id="dailyForm">
+      <label><input type="checkbox" name="task" value="1"> <span id="opt1"></span></label><br>
+      <label><input type="checkbox" name="task" value="1"> <span id="opt2"></span></label><br>
+      <label><input type="checkbox" name="task" value="1"> Good Behaviour</label><br>
+      <label><input type="checkbox" name="task" value="1"> Morning Routines</label><br>
+      <button type="button" onclick="submitTasks()">Submit</button>
+    </form>
+  </div>
+
+  <div class="leaderboard">
+    <h2>Leaderboard</h2>
+    <table id="leaderboardTable">
+      <tr><th>Player ID</th><th>Points</th><th>Rank</th></tr>
+    </table>
+  </div>
+
+  <script>
+    const players = {
+      "19113": {name: "Player X", points: 0},
+      "2081": {name: "Player Y", points: 0},
+      "Bravys": {name: "Player Z", points: 0}
+    };
+
+    let currentPlayer = null;
+    let dailyClicks = 0;
+
+    function randomReward() {
+      const rewards = ["🍫 Chocolate", "🍔 Food", "🎁 Gift"];
+      return rewards[Math.floor(Math.random() * rewards.length)];
+    }
+
+    function login() {
+      const id = document.getElementById("userId").value.trim();
+      if (players[id]) {
+        currentPlayer = id;
+        document.getElementById("welcome").textContent = "Welcome " + players[id].name;
+        document.getElementById("reward").textContent = "Reward: " + randomReward();
+        document.getElementById("options").style.display = "block";
+
+        // set option 2 based on player
+        if (id === "19113") {
+          document.getElementById("opt1").textContent = "Daily Chores";
+          document.getElementById("opt2").textContent = "Daily Chores (Special)";
+        } else {
+          document.getElementById("opt1").textContent = "Daily Chores";
+          document.getElementById("opt2").textContent = "Daily Studying";
+        }
+        updateLeaderboard();
+      } else {
+        document.getElementById("welcome").textContent = "Invalid User ID!";
+      }
+    }
+
+    function submitTasks() {
+      const form = document.getElementById("dailyForm");
+      const checked = form.querySelectorAll("input[type=checkbox]:checked");
+      if (checked.length + dailyClicks > 4) {
+        alert("You can only tick up to 4 options per day!");
+        return;
+      }
+      players[currentPlayer].points += checked.length;
+      dailyClicks += checked.length;
+      form.reset();
+      updateLeaderboard();
+    }
+
+    function updateLeaderboard() {
+      const table = document.getElementById("leaderboardTable");
+      table.innerHTML = "<tr><th>Player ID</th><th>Points</th><th>Rank</th></tr>";
+      const sorted = Object.entries(players).sort((a,b)=>b[1].points - a[1].points);
+      sorted.forEach((p, index) => {
+        const row = `<tr><td>${p[0]}</td><td>${p[1].points}</td><td>${index+1}</td></tr>`;
+        table.innerHTML += row;
+      });
+    }
+
+    // Reset points monthly (for demo, resets every reload)
+    window.onload = () => {
+      for (let id in players) {
+        players[id].points = 0;
+      }
+      updateLeaderboard();
+    };
+  </script>
+</body>
+</html>
