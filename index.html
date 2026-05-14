@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Time table !!!</title>
+  <title>Player Login</title>
   <style>
     body {
       background-color: #1e1e2f;
@@ -26,6 +26,11 @@
     button:hover {
       background-color: #45a049;
     }
+    .logo {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 20px;
+    }
     .options {
       margin-top: 20px;
       text-align: center;
@@ -36,7 +41,7 @@
       font-size: 20px;
     }
     .options input[type=checkbox] {
-      transform: scale(1.5); /* make boxes bigger */
+      transform: scale(1.5);
       margin-right: 10px;
     }
     .leaderboard {
@@ -58,6 +63,8 @@
   </style>
 </head>
 <body>
+  <img src="blackboard.png" alt="Blackboard Logo" class="logo">
+
   <div id="loginScreen">
     <h1>Enter Your User ID</h1>
     <input type="text" id="userId" placeholder="User ID">
@@ -91,11 +98,41 @@
     };
 
     let currentPlayer = null;
-    let dailyClicks = 0;
 
     function randomReward() {
       const rewards = ["🍫 Chocolate", "🍔 Food", "🎁 Gift"];
       return rewards[Math.floor(Math.random() * rewards.length)];
+    }
+
+    function loadPoints() {
+      const savedData = JSON.parse(localStorage.getItem("playerPoints")) || {};
+      const savedMonth = localStorage.getItem("pointsMonth");
+      const currentMonth = new Date().getMonth();
+
+      // Reset if month changed
+      if (savedMonth == null || parseInt(savedMonth) !== currentMonth) {
+        localStorage.setItem("pointsMonth", currentMonth);
+        localStorage.setItem("playerPoints", JSON.stringify({}));
+        for (let id in players) players[id].points = 0;
+        return;
+      }
+
+      for (let id in players) {
+        if (savedData[id]) players[id].points = savedData[id];
+      }
+    }
+
+    function savePoints() {
+      const data = {};
+      for (let id in players) data[id] = players[id].points;
+      localStorage.setItem("playerPoints", JSON.stringify(data));
+      localStorage.setItem("pointsMonth", new Date().getMonth());
+    }
+
+    function canSubmitToday(playerId) {
+      const lastSubmit = localStorage.getItem("lastSubmit_" + playerId);
+      const today = new Date().toDateString();
+      return lastSubmit !== today; // allow only if not submitted today
     }
 
     function login() {
@@ -107,7 +144,6 @@
         document.getElementById("options").style.display = "block";
         document.getElementById("loginScreen").style.display = "none";
 
-        // set option 2 based on player
         if (id === "Achu") {
           document.getElementById("opt1").textContent = "Daily Chores";
           document.getElementById("opt2").textContent = "Daily Chores (Special)";
@@ -122,24 +158,30 @@
     }
 
     function submitTasks() {
+      if (!canSubmitToday(currentPlayer)) {
+        alert("You already submitted today! Try again tomorrow.");
+        return;
+      }
+
       const form = document.getElementById("dailyForm");
       const checked = form.querySelectorAll("input[type=checkbox]:checked");
-      if (checked.length + dailyClicks > 4) {
+      if (checked.length > 4) {
         alert("You can only tick up to 4 options per day!");
         return;
       }
+
       players[currentPlayer].points += checked.length;
-      dailyClicks += checked.length;
+      localStorage.setItem("lastSubmit_" + currentPlayer, new Date().toDateString());
       form.reset();
+      savePoints();
       updateLeaderboard();
 
-      // redirect back to start
+      // Redirect back to start
       document.getElementById("options").style.display = "none";
       document.getElementById("loginScreen").style.display = "block";
       document.getElementById("userId").value = "";
       document.getElementById("welcome").textContent = "";
       document.getElementById("reward").textContent = "";
-      dailyClicks = 0;
     }
 
     function updateLeaderboard() {
@@ -152,11 +194,8 @@
       });
     }
 
-    // Reset points monthly (demo: resets every reload)
     window.onload = () => {
-      for (let id in players) {
-        players[id].points = 0;
-      }
+      loadPoints();
       updateLeaderboard();
     };
   </script>
