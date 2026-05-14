@@ -28,8 +28,16 @@
     }
     .options {
       margin-top: 20px;
-      text-align: left;
-      display: inline-block;
+      text-align: center;
+    }
+    .options label {
+      display: block;
+      margin: 15px auto;
+      font-size: 20px;
+    }
+    .options input[type=checkbox] {
+      transform: scale(1.5); /* make boxes bigger */
+      margin-right: 10px;
     }
     .leaderboard {
       margin-top: 40px;
@@ -50,18 +58,20 @@
   </style>
 </head>
 <body>
-  <h1>Enter Your User ID</h1>
-  <input type="text" id="userId" placeholder="User ID">
-  <button onclick="login()">Login</button>
-  <h2 id="welcome"></h2>
-  <h3 id="reward"></h3>
+  <div id="loginScreen">
+    <h1>Enter Your User ID</h1>
+    <input type="text" id="userId" placeholder="User ID">
+    <button onclick="login()">Login</button>
+    <h2 id="welcome"></h2>
+    <h3 id="reward"></h3>
+  </div>
 
   <div id="options" class="options" style="display:none;">
     <form id="dailyForm">
-      <label><input type="checkbox" name="task" value="1"> <span id="opt1"></span></label><br>
-      <label><input type="checkbox" name="task" value="1"> <span id="opt2"></span></label><br>
-      <label><input type="checkbox" name="task" value="1"> Good Behaviour</label><br>
-      <label><input type="checkbox" name="task" value="1"> Morning Routines</label><br>
+      <label><input type="checkbox" name="task" value="1"> <span id="opt1"></span></label>
+      <label><input type="checkbox" name="task" value="1"> <span id="opt2"></span></label>
+      <label><input type="checkbox" name="task" value="1"> Good Behaviour</label>
+      <label><input type="checkbox" name="task" value="1"> Morning Routines</label>
       <button type="button" onclick="submitTasks()">Submit</button>
     </form>
   </div>
@@ -75,7 +85,7 @@
 
   <script>
     const players = {
-      "19113": {name: "Achuuu", points: 0},
+      "Achu": {name: "Achu", points: 0},
       "Bikki": {name: "Bikki", points: 0},
       "Bravys": {name: "Bravys", points: 0}
     };
@@ -95,9 +105,10 @@
         document.getElementById("welcome").textContent = "Welcome " + players[id].name;
         document.getElementById("reward").textContent = "Reward: " + randomReward();
         document.getElementById("options").style.display = "block";
+        document.getElementById("loginScreen").style.display = "none";
 
         // set option 2 based on player
-        if (id === "19113") {
+        if (id === "Achu") {
           document.getElementById("opt1").textContent = "Daily Chores";
           document.getElementById("opt2").textContent = "Daily Chores (Special)";
         } else {
@@ -121,6 +132,14 @@
       dailyClicks += checked.length;
       form.reset();
       updateLeaderboard();
+
+      // redirect back to start
+      document.getElementById("options").style.display = "none";
+      document.getElementById("loginScreen").style.display = "block";
+      document.getElementById("userId").value = "";
+      document.getElementById("welcome").textContent = "";
+      document.getElementById("reward").textContent = "";
+      dailyClicks = 0;
     }
 
     function updateLeaderboard() {
@@ -128,12 +147,12 @@
       table.innerHTML = "<tr><th>Player ID</th><th>Points</th><th>Rank</th></tr>";
       const sorted = Object.entries(players).sort((a,b)=>b[1].points - a[1].points);
       sorted.forEach((p, index) => {
-        const row = `<tr><td>${p[0]}</td><td>${p[1].points}</td><td>${index+1}</td></tr>`;
+        const row = `<tr><td>${p[0]} (${p[1].name})</td><td>${p[1].points}</td><td>${index+1}</td></tr>`;
         table.innerHTML += row;
       });
     }
 
-    // Reset points monthly (for demo, resets every reload)
+    // Reset points monthly (demo: resets every reload)
     window.onload = () => {
       for (let id in players) {
         players[id].points = 0;
