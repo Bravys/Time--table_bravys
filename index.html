@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Time table !!!</title>
+  <title>Player Login</title>
   <!-- Favicon (logo in tab section) -->
   <link rel="icon" type="image/png" href="blackboard.png">
   <style>
@@ -62,10 +62,11 @@
 <body>
   <div id="loginScreen">
     <h1>Enter Your User ID</h1>
+    <!-- Reward shown here, fixed for the month -->
+    <h3 id="reward"></h3>
     <input type="text" id="userId" placeholder="User ID">
     <button onclick="login()">Login</button>
     <h2 id="welcome"></h2>
-    <h3 id="reward"></h3>
   </div>
 
   <div id="options" class="options" style="display:none;">
@@ -88,7 +89,7 @@
   <script>
     const players = {
       "Achu": {name: "Achu", points: 0},
-      "Bikki": {name: "Bikki", points: 0},
+      "Unicorn": {name: "Bikki", points: 0},
       "Bravys": {name: "Bravys", points: 0}
     };
 
@@ -99,7 +100,7 @@
       return rewards[Math.floor(Math.random() * rewards.length)];
     }
 
-    function loadPoints() {
+    function loadPointsAndReward() {
       const savedData = JSON.parse(localStorage.getItem("playerPoints")) || {};
       const savedMonth = localStorage.getItem("pointsMonth");
       const currentMonth = new Date().getMonth();
@@ -109,12 +110,19 @@
         localStorage.setItem("pointsMonth", currentMonth);
         localStorage.setItem("playerPoints", JSON.stringify({}));
         for (let id in players) players[id].points = 0;
-        return;
+
+        // Pick new reward for the month
+        const reward = randomReward();
+        localStorage.setItem("monthlyReward", reward);
+      } else {
+        for (let id in players) {
+          if (savedData[id]) players[id].points = savedData[id];
+        }
       }
 
-      for (let id in players) {
-        if (savedData[id]) players[id].points = savedData[id];
-      }
+      // Show reward at start
+      const reward = localStorage.getItem("monthlyReward") || randomReward();
+      document.getElementById("reward").textContent = "Reward: " + reward;
     }
 
     function savePoints() {
@@ -135,7 +143,6 @@
       if (players[id]) {
         currentPlayer = id;
         document.getElementById("welcome").textContent = "Welcome " + players[id].name;
-        document.getElementById("reward").textContent = "Reward: " + randomReward();
         document.getElementById("options").style.display = "block";
         document.getElementById("loginScreen").style.display = "none";
 
@@ -176,7 +183,6 @@
       document.getElementById("loginScreen").style.display = "block";
       document.getElementById("userId").value = "";
       document.getElementById("welcome").textContent = "";
-      document.getElementById("reward").textContent = "";
     }
 
     function updateLeaderboard() {
@@ -190,7 +196,7 @@
     }
 
     window.onload = () => {
-      loadPoints();
+      loadPointsAndReward();
       updateLeaderboard();
     };
   </script>
