@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Time table !!!</title>
-  <!-- Favicon (logo in tab section) -->
   <link rel="icon" type="image/png" href="blackboard.png">
   <style>
     body {
@@ -41,6 +40,11 @@
       transform: scale(1.5);
       margin-right: 10px;
     }
+    /* Grayed out effect for disabled checkboxes */
+    input[type=checkbox]:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
     .leaderboard {
       margin-top: 40px;
       text-align: center;
@@ -62,7 +66,6 @@
 <body>
   <div id="loginScreen">
     <h1>Enter Your User ID</h1>
-    <!-- Reward shown here, fixed for the month -->
     <h3 id="reward"></h3>
     <input type="text" id="userId" placeholder="User ID">
     <button onclick="login()">Login</button>
@@ -105,13 +108,10 @@
       const savedMonth = localStorage.getItem("pointsMonth");
       const currentMonth = new Date().getMonth();
 
-      // Reset if month changed
       if (savedMonth == null || parseInt(savedMonth) !== currentMonth) {
         localStorage.setItem("pointsMonth", currentMonth);
         localStorage.setItem("playerPoints", JSON.stringify({}));
         for (let id in players) players[id].points = 0;
-
-        // Pick new reward for the month
         const reward = randomReward();
         localStorage.setItem("monthlyReward", reward);
       } else {
@@ -119,8 +119,6 @@
           if (savedData[id]) players[id].points = savedData[id];
         }
       }
-
-      // Show reward at start
       const reward = localStorage.getItem("monthlyReward") || randomReward();
       document.getElementById("reward").textContent = "Reward: " + reward;
     }
@@ -130,12 +128,6 @@
       for (let id in players) data[id] = players[id].points;
       localStorage.setItem("playerPoints", JSON.stringify(data));
       localStorage.setItem("pointsMonth", new Date().getMonth());
-    }
-
-    function canSubmitToday(playerId) {
-      const lastSubmit = localStorage.getItem("lastSubmit_" + playerId);
-      const today = new Date().toDateString();
-      return lastSubmit !== today; // allow only if not submitted today
     }
 
     function login() {
@@ -149,9 +141,15 @@
         if (id === "Achu") {
           document.getElementById("opt1").textContent = "Daily Chores";
           document.getElementById("opt2").textContent = "Daily Chores (Special)";
-        } else {
+          addExtraOption("VAVKD", -2);
+        } else if (id === "Unicorn") {
           document.getElementById("opt1").textContent = "Daily Chores";
           document.getElementById("opt2").textContent = "Daily Studying";
+          addExtraOption("mongi", -1);
+        } else if (id === "Bravys") {
+          document.getElementById("opt1").textContent = "Daily Chores";
+          document.getElementById("opt2").textContent = "Daily Studying";
+          addExtraOption("KIMU", -1);
         }
         updateLeaderboard();
       } else {
@@ -159,30 +157,35 @@
       }
     }
 
-    function submitTasks() {
-      if (!canSubmitToday(currentPlayer)) {
-        alert("You already submitted today! Try again tomorrow.");
-        return;
-      }
+    function addExtraOption(label, valueChange) {
+      const form = document.getElementById("dailyForm");
+      const newLabel = document.createElement("label");
+      const newBox = document.createElement("input");
+      newBox.type = "checkbox";
+      newBox.dataset.valueChange = valueChange;
+      newLabel.appendChild(newBox);
+      newLabel.appendChild(document.createTextNode(" " + label));
+      form.appendChild(newLabel);
+    }
 
+    function submitTasks() {
       const form = document.getElementById("dailyForm");
       const checked = form.querySelectorAll("input[type=checkbox]:checked");
+
       if (checked.length > 4) {
         alert("You can only tick up to 4 options per day!");
         return;
       }
 
-      players[currentPlayer].points += checked.length;
-      localStorage.setItem("lastSubmit_" + currentPlayer, new Date().toDateString());
-      form.reset();
+      checked.forEach(box => {
+        let change = box.dataset.valueChange ? parseInt(box.dataset.valueChange) : 1;
+        players[currentPlayer].points += change;
+        box.disabled = true; // disable only the ones used
+      });
+
       savePoints();
       updateLeaderboard();
-
-      // Redirect back to start
-      document.getElementById("options").style.display = "none";
-      document.getElementById("loginScreen").style.display = "block";
-      document.getElementById("userId").value = "";
-      document.getElementById("welcome").textContent = "";
+      form.reset();
     }
 
     function updateLeaderboard() {
