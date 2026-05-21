@@ -78,6 +78,8 @@
       <label><input type="checkbox" name="task" value="1"> <span id="opt2"></span></label>
       <label><input type="checkbox" name="task" value="1"> Good Behaviour</label>
       <label><input type="checkbox" name="task" value="1"> Morning Routines</label>
+      <!-- Extra options will be injected here -->
+      <div id="extraOptions"></div>
       <button type="button" onclick="submitTasks()">Submit</button>
     </form>
   </div>
@@ -110,13 +112,12 @@
 
       if (savedMonth == null || parseInt(savedMonth) !== currentMonth) {
         localStorage.setItem("pointsMonth", currentMonth);
-        localStorage.setItem("playerPoints", JSON.stringify({}));
-        for (let id in players) players[id].points = 0;
+        localStorage.setItem("playerPoints", JSON.stringify(players)); // keep initial points
         const reward = randomReward();
         localStorage.setItem("monthlyReward", reward);
       } else {
         for (let id in players) {
-          if (savedData[id]) players[id].points = savedData[id];
+          if (savedData[id]) players[id].points = savedData[id].points;
         }
       }
       const reward = localStorage.getItem("monthlyReward") || randomReward();
@@ -124,9 +125,7 @@
     }
 
     function savePoints() {
-      const data = {};
-      for (let id in players) data[id] = players[id].points;
-      localStorage.setItem("playerPoints", JSON.stringify(data));
+      localStorage.setItem("playerPoints", JSON.stringify(players));
       localStorage.setItem("pointsMonth", new Date().getMonth());
     }
 
@@ -137,6 +136,9 @@
         document.getElementById("welcome").textContent = "Welcome " + players[id].name;
         document.getElementById("options").style.display = "block";
         document.getElementById("loginScreen").style.display = "none";
+
+        // Reset extra options area
+        document.getElementById("extraOptions").innerHTML = "";
 
         if (id === "Achu") {
           document.getElementById("opt1").textContent = "Daily Chores";
@@ -158,14 +160,14 @@
     }
 
     function addExtraOption(label, valueChange) {
-      const form = document.getElementById("dailyForm");
+      const container = document.getElementById("extraOptions");
       const newLabel = document.createElement("label");
       const newBox = document.createElement("input");
       newBox.type = "checkbox";
       newBox.dataset.valueChange = valueChange;
       newLabel.appendChild(newBox);
       newLabel.appendChild(document.createTextNode(" " + label));
-      form.appendChild(newLabel);
+      container.appendChild(newLabel);
     }
 
     function submitTasks() {
