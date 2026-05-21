@@ -78,7 +78,6 @@
       <label><input type="checkbox" name="task" value="1"> <span id="opt2"></span></label>
       <label><input type="checkbox" name="task" value="1"> Good Behaviour</label>
       <label><input type="checkbox" name="task" value="1"> Morning Routines</label>
-      <!-- Extra options will be injected here -->
       <div id="extraOptions"></div>
       <button type="button" onclick="submitTasks()">Submit</button>
     </form>
@@ -92,6 +91,7 @@
   </div>
 
   <script>
+    // Fixed starting points
     const players = {
       "Achu": {name: "Achu", points: 1},
       "Unicorn": {name: "Bikki", points: 6},
@@ -106,20 +106,25 @@
     }
 
     function loadPointsAndReward() {
-      const savedData = JSON.parse(localStorage.getItem("playerPoints")) || {};
+      const savedData = JSON.parse(localStorage.getItem("playerPoints"));
       const savedMonth = localStorage.getItem("pointsMonth");
       const currentMonth = new Date().getMonth();
 
-      if (savedMonth == null || parseInt(savedMonth) !== currentMonth) {
-        localStorage.setItem("pointsMonth", currentMonth);
-        localStorage.setItem("playerPoints", JSON.stringify(players)); // keep initial points
-        const reward = randomReward();
-        localStorage.setItem("monthlyReward", reward);
-      } else {
+      // Only overwrite if saved data exists
+      if (savedData) {
         for (let id in players) {
           if (savedData[id]) players[id].points = savedData[id].points;
         }
       }
+
+      // Reset monthly reward only, not points
+      if (savedMonth == null || parseInt(savedMonth) !== currentMonth) {
+        localStorage.setItem("pointsMonth", currentMonth);
+        localStorage.setItem("playerPoints", JSON.stringify(players));
+        const reward = randomReward();
+        localStorage.setItem("monthlyReward", reward);
+      }
+
       const reward = localStorage.getItem("monthlyReward") || randomReward();
       document.getElementById("reward").textContent = "Reward: " + reward;
     }
@@ -137,7 +142,6 @@
         document.getElementById("options").style.display = "block";
         document.getElementById("loginScreen").style.display = "none";
 
-        // Reset extra options area
         document.getElementById("extraOptions").innerHTML = "";
 
         if (id === "Achu") {
