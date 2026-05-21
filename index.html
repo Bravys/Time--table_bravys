@@ -91,7 +91,6 @@
   </div>
 
   <script>
-    // Fixed starting points
     const players = {
       "Achu": {name: "Achu", points: 1},
       "Unicorn": {name: "Bikki", points: 6},
@@ -110,14 +109,12 @@
       const savedMonth = localStorage.getItem("pointsMonth");
       const currentMonth = new Date().getMonth();
 
-      // Only overwrite if saved data exists
       if (savedData) {
         for (let id in players) {
           if (savedData[id]) players[id].points = savedData[id].points;
         }
       }
 
-      // Reset monthly reward only, not points
       if (savedMonth == null || parseInt(savedMonth) !== currentMonth) {
         localStorage.setItem("pointsMonth", currentMonth);
         localStorage.setItem("playerPoints", JSON.stringify(players));
@@ -157,6 +154,16 @@
           document.getElementById("opt2").textContent = "Daily Studying";
           addExtraOption("KIMU", -1);
         }
+
+        // Restore disabled state
+        const form = document.getElementById("dailyForm");
+        form.querySelectorAll("input[type=checkbox]").forEach(box => {
+          const labelText = box.nextSibling.textContent.trim();
+          if (localStorage.getItem(id + "_disabled_" + labelText) === "true") {
+            box.disabled = true;
+          }
+        });
+
         updateLeaderboard();
       } else {
         document.getElementById("welcome").textContent = "Invalid User ID!";
@@ -186,12 +193,20 @@
       checked.forEach(box => {
         let change = box.dataset.valueChange ? parseInt(box.dataset.valueChange) : 1;
         players[currentPlayer].points += change;
-        box.disabled = true; // disable only the ones used
+        box.disabled = true;
+        // Save disabled state
+        localStorage.setItem(currentPlayer + "_disabled_" + box.nextSibling.textContent.trim(), "true");
       });
 
       savePoints();
       updateLeaderboard();
       form.reset();
+
+      // Return to login screen
+      document.getElementById("options").style.display = "none";
+      document.getElementById("loginScreen").style.display = "block";
+      document.getElementById("userId").value = "";
+      document.getElementById("welcome").textContent = "";
     }
 
     function updateLeaderboard() {
